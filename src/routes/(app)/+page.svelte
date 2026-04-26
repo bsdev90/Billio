@@ -150,12 +150,14 @@
 <svelte:head><title>{m.dashboard_title()} · {m.app_name()}</title></svelte:head>
 
 <div>
-	<div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+	<div
+		class="mb-3 flex flex-col items-start gap-3 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center"
+	>
 		<h1 class="text-2xl font-semibold text-slate-900">{m.dashboard_title()}</h1>
 
 		{#if data.accounts.length > 0}
 			<div
-				class="inline-flex max-w-full flex-wrap items-center justify-self-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-sm"
+				class="flex w-full flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm md:inline-flex md:w-auto md:justify-self-center md:py-1.5"
 			>
 				<span class="text-sm font-medium text-slate-500">
 					{m.entries_filter_account()}
@@ -165,7 +167,7 @@
 					<button
 						type="button"
 						onclick={() => toggleAccount(a.id)}
-						class="cursor-pointer rounded-full border border-transparent px-3 py-1 text-xs font-semibold transition hover:brightness-95"
+						class="grow cursor-pointer rounded-full border border-transparent px-3 py-1 text-xs font-semibold transition hover:brightness-95 md:grow-0"
 						style={active
 							? `background-color: ${a.color}; color: ${contrastText(a.color)};`
 							: 'background-color: #f1f5f9; color: #94a3b8;'}
@@ -174,11 +176,9 @@
 					</button>
 				{/each}
 			</div>
-		{:else}
-			<div></div>
 		{/if}
 
-		<div></div>
+		<div class="hidden md:block"></div>
 	</div>
 
 	{#if data.accounts.length === 0}
@@ -189,7 +189,7 @@
 		</div>
 	{:else}
 		<div class="space-y-8">
-			<section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+			<section class="rounded-lg border border-slate-200 bg-white px-4 pt-0 pb-4 shadow-sm sm:p-6">
 				<SummaryBlocks {summary} />
 			</section>
 
@@ -204,40 +204,42 @@
 		<section class="space-y-3">
 			<h2 class="text-lg font-medium text-slate-900">{m.entries_title()}</h2>
 
-			<div class="flex flex-wrap items-center gap-3 text-sm">
-				<label class="flex items-center gap-2">
-					<span class="text-slate-500">{m.entries_filter_type()}</span>
+			<div
+				class="grid grid-cols-3 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center sm:gap-3"
+			>
+				<label class="contents sm:flex sm:items-center sm:gap-2">
+					<span class="hidden text-slate-500 sm:inline">{m.entries_filter_type()}</span>
 					<select
 						value={data.filter.type ?? ''}
 						onchange={(e) => updateFilter('type', e.currentTarget.value)}
-						class="min-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pr-8 pl-2 text-sm"
+						class="w-full min-w-0 rounded-md border border-slate-300 bg-white py-1.5 pr-7 pl-2 text-xs sm:w-auto sm:min-w-[10rem] sm:text-sm"
 					>
-						<option value="">{m.entries_filter_all()}</option>
+						<option value="">{m.entries_filter_type()}</option>
 						<option value="abonnement">{m.type_subscription()}</option>
 						<option value="charge">{m.type_charge()}</option>
 					</select>
 				</label>
-				<label class="flex items-center gap-2">
-					<span class="text-slate-500">{m.entries_filter_periodicity()}</span>
+				<label class="contents sm:flex sm:items-center sm:gap-2">
+					<span class="hidden text-slate-500 sm:inline">{m.entries_filter_periodicity()}</span>
 					<select
 						value={data.filter.periodicity ?? ''}
 						onchange={(e) => updateFilter('periodicity', e.currentTarget.value)}
-						class="min-w-[10rem] rounded-md border border-slate-300 bg-white py-1 pr-8 pl-2 text-sm"
+						class="w-full min-w-0 rounded-md border border-slate-300 bg-white py-1.5 pr-7 pl-2 text-xs sm:w-auto sm:min-w-[10rem] sm:text-sm"
 					>
-						<option value="">{m.entries_filter_all()}</option>
+						<option value="">{m.entries_filter_periodicity()}</option>
 						<option value="mensuel">{m.periodicity_monthly()}</option>
 						<option value="trimestriel">{m.periodicity_quarterly()}</option>
 						<option value="annuel">{m.periodicity_yearly()}</option>
 					</select>
 				</label>
-				<label class="flex items-center gap-2">
-					<span class="text-slate-500">{m.entries_filter_status()}</span>
+				<label class="contents sm:flex sm:items-center sm:gap-2">
+					<span class="hidden text-slate-500 sm:inline">{m.entries_filter_status()}</span>
 					<select
 						value={data.filter.status ?? ''}
 						onchange={(e) => updateFilter('status', e.currentTarget.value)}
-						class="min-w-[9rem] rounded-md border border-slate-300 bg-white py-1 pr-8 pl-2 text-sm"
+						class="w-full min-w-0 rounded-md border border-slate-300 bg-white py-1.5 pr-7 pl-2 text-xs sm:w-auto sm:min-w-[9rem] sm:text-sm"
 					>
-						<option value="">{m.entries_filter_all()}</option>
+						<option value="">{m.entries_filter_status()}</option>
 						<option value="active">{m.entries_filter_active()}</option>
 						<option value="inactive">{m.entries_filter_inactive()}</option>
 					</select>
@@ -245,7 +247,7 @@
 
 				<a
 					href="/entries/new"
-					class="ml-auto rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+					class="col-span-3 rounded-md bg-slate-900 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-slate-800 sm:col-span-1 sm:ml-auto"
 				>
 					+ {m.entries_add()}
 				</a>
@@ -262,7 +264,7 @@
 					<table class="min-w-full text-sm">
 						<thead class="bg-slate-50 text-slate-600">
 							<tr class="text-left">
-								<th class="px-4 py-2 font-medium">
+								<th class="px-3 py-2 font-medium md:px-4">
 									<button
 										type="button"
 										onclick={() => setSort('label')}
@@ -272,7 +274,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('label')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 font-medium">
+								<th class="hidden px-4 py-2 font-medium md:table-cell">
 									<button
 										type="button"
 										onclick={() => setSort('type')}
@@ -282,7 +284,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('type')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 font-medium">
+								<th class="hidden px-4 py-2 font-medium md:table-cell">
 									<button
 										type="button"
 										onclick={() => setSort('account')}
@@ -292,7 +294,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('account')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 font-medium">
+								<th class="hidden px-4 py-2 font-medium md:table-cell">
 									<button
 										type="button"
 										onclick={() => setSort('periodicity')}
@@ -302,7 +304,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('periodicity')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 text-right font-medium">
+								<th class="px-3 py-2 text-right font-medium md:px-4">
 									<button
 										type="button"
 										onclick={() => setSort('amount')}
@@ -312,7 +314,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('amount')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 text-right font-medium">
+								<th class="hidden px-4 py-2 text-right font-medium md:table-cell">
 									<button
 										type="button"
 										onclick={() => setSort('monthly')}
@@ -322,7 +324,7 @@
 										<span class="text-xs text-slate-400">{sortIcon('monthly')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 text-center font-medium">
+								<th class="hidden px-4 py-2 text-center font-medium md:table-cell">
 									<button
 										type="button"
 										onclick={() => setSort('day')}
@@ -332,15 +334,42 @@
 										<span class="text-xs text-slate-400">{sortIcon('day')}</span>
 									</button>
 								</th>
-								<th class="px-4 py-2 font-medium">{m.entries_column_notes()}</th>
-								<th class="px-4 py-2 text-right font-medium">{m.entries_column_actions()}</th>
+								<th class="hidden px-4 py-2 font-medium md:table-cell">
+									{m.entries_column_notes()}
+								</th>
+								<th class="px-3 py-2 text-right font-medium md:px-4">
+									{m.entries_column_actions()}
+								</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-100">
 							{#each sortedEntries as entry (entry.id)}
 								<tr class={entry.isActive ? '' : 'text-slate-400'}>
-									<td class="px-4 py-2 font-medium">{entry.label}</td>
-									<td class="px-4 py-2">
+									<td class="px-3 py-2 font-medium md:px-4">
+										<div class="flex flex-col gap-0.5 md:contents">
+											<span class="inline-flex items-center gap-1.5">
+												<span
+													class="inline-block h-2 w-2 shrink-0 rounded-full md:hidden"
+													style="background-color: {entry.type === 'abonnement'
+														? SUBSCRIPTION_COLOR
+														: CHARGE_COLOR}"
+												></span>
+												<span class="truncate">{entry.label}</span>
+											</span>
+											<span
+												class="inline-flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-normal text-slate-500 md:hidden"
+											>
+												<span
+													class="inline-block h-1.5 w-1.5 rounded-full"
+													style="background-color: {entry.accountColor ?? '#94a3b8'}"
+												></span>
+												<span>{entry.accountName}</span>
+												<span class="text-slate-300">·</span>
+												<span>{periodicityLabel(entry.periodicity)}</span>
+											</span>
+										</div>
+									</td>
+									<td class="hidden px-4 py-2 md:table-cell">
 										<span class="inline-flex items-center gap-1.5">
 											<span
 												class="inline-block h-2 w-2 rounded-full"
@@ -351,7 +380,7 @@
 											{typeLabel(entry.type)}
 										</span>
 									</td>
-									<td class="px-4 py-2">
+									<td class="hidden px-4 py-2 md:table-cell">
 										<span class="inline-flex items-center gap-1.5">
 											<span
 												class="inline-block h-2 w-2 rounded-full"
@@ -360,16 +389,22 @@
 											{entry.accountName}
 										</span>
 									</td>
-									<td class="px-4 py-2">{periodicityLabel(entry.periodicity)}</td>
-									<td class="px-4 py-2 text-right font-semibold tabular-nums">
+									<td class="hidden px-4 py-2 md:table-cell">
+										{periodicityLabel(entry.periodicity)}
+									</td>
+									<td class="px-3 py-2 text-right font-semibold tabular-nums md:px-4">
 										{formatCents(entry.amountCents)}
 									</td>
-									<td class="px-4 py-2 text-right tabular-nums">
+									<td class="hidden px-4 py-2 text-right tabular-nums md:table-cell">
 										{formatCents(monthlyLissedCents(entry))}
 									</td>
-									<td class="px-4 py-2 text-center tabular-nums">{entry.day ?? '—'}</td>
-									<td class="max-w-xs truncate px-4 py-2 text-slate-500">{entry.notes ?? ''}</td>
-									<td class="px-4 py-2 text-right">
+									<td class="hidden px-4 py-2 text-center tabular-nums md:table-cell">
+										{entry.day ?? '—'}
+									</td>
+									<td class="hidden max-w-xs truncate px-4 py-2 text-slate-500 md:table-cell">
+										{entry.notes ?? ''}
+									</td>
+									<td class="px-3 py-2 text-right md:px-4">
 										<div class="flex justify-end gap-1">
 											<a
 												href={`/entries/${entry.id}/edit`}

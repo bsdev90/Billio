@@ -59,7 +59,7 @@
 <form
 	method="POST"
 	use:enhance
-	class="space-y-5 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+	class="space-y-5 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
 >
 	<input type="hidden" name="type" value={selectedType} />
 	<input type="hidden" name="accountId" value={selectedAccountId ?? ''} />

@@ -3,7 +3,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { verifyCredentials, createSession } from '$lib/server/auth';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.authenticated) throw redirect(303, '/');
+	if (locals.user) throw redirect(303, '/');
 	return {};
 };
 
@@ -17,12 +17,12 @@ export const actions: Actions = {
 			return fail(400, { login, error: true });
 		}
 
-		const ok = await verifyCredentials(login, password);
-		if (!ok) {
+		const user = await verifyCredentials(login, password);
+		if (!user) {
 			return fail(401, { login, error: true });
 		}
 
-		await createSession(cookies);
+		await createSession(cookies, user.id);
 		throw redirect(303, '/');
 	}
 };

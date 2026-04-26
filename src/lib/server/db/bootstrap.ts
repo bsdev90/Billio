@@ -6,8 +6,7 @@ import { mkdirSync, existsSync } from 'node:fs';
 import bcrypt from 'bcryptjs';
 import { env } from '$env/dynamic/private';
 import { db } from './index';
-import { settings } from './schema';
-import { eq } from 'drizzle-orm';
+import { users } from './schema';
 
 const DEFAULT_LOGIN = 'admin';
 const DEFAULT_PASSWORD = 'admin';
@@ -27,27 +26,22 @@ function runMigrations() {
 	migClient.close();
 }
 
-async function seedDefaults() {
-	const existing = await db
-		.select()
-		.from(settings)
-		.where(eq(settings.key, 'auth.login'))
-		.limit(1);
-
+async function ensureFirstUser() {
+	const existing = await db.select({ id: users.id }).from(users).limit(1);
 	if (existing.length > 0) return;
 
 	const hash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
-
-	await db.insert(settings).values([
-		{ key: 'auth.login', value: DEFAULT_LOGIN },
-		{ key: 'auth.password_hash', value: hash },
-		{ key: 'auth.force_reset', value: '1' }
-	]);
+	await db.insert(users).values({
+		login: DEFAULT_LOGIN,
+		passwordHash: hash,
+		isAdmin: true,
+		forceReset: true
+	});
 }
 
 export async function bootstrap() {
 	if (initialized) return;
 	runMigrations();
-	await seedDefaults();
+	await ensureFirstUser();
 	initialized = true;
 }

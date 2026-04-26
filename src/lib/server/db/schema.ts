@@ -53,6 +53,27 @@ export const settings = sqliteTable('settings', {
 		.$onUpdate(() => new Date())
 });
 
+export const users = sqliteTable(
+	'users',
+	{
+		id: integer('id').primaryKey({ autoIncrement: true }),
+		login: text('login').notNull(),
+		passwordHash: text('password_hash').notNull(),
+		isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+		forceReset: integer('force_reset', { mode: 'boolean' }).notNull().default(false),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		updatedAt: integer('updated_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date())
+			.$onUpdate(() => new Date())
+	},
+	(t) => ({
+		loginUnique: uniqueIndex('users_login_unique').on(t.login)
+	})
+);
+
 export const accountsRelations = relations(accounts, ({ many }) => ({
 	entries: many(entries)
 }));
@@ -70,3 +91,5 @@ export type Entry = typeof entries.$inferSelect;
 export type NewEntry = typeof entries.$inferInsert;
 export type Periodicity = Entry['periodicity'];
 export type EntryType = Entry['type'];
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;

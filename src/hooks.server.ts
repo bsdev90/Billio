@@ -4,11 +4,12 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { getTextDirection, locales, baseLocale } from '$lib/paraglide/runtime';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 import { bootstrap } from '$lib/server/db/bootstrap';
-import { isAuthenticated, isForceReset } from '$lib/server/auth';
+import { getSessionUser } from '$lib/server/auth';
 import { getSetting } from '$lib/server/settings-service';
 
 const PUBLIC_ROUTES = new Set(['/login']);
 const RESET_ROUTE = '/force-reset';
+const ADMIN_PREFIXES = ['/settings'];
 
 let bootstrapPromise: Promise<void> | null = null;
 function ensureBootstrapped() {
@@ -23,25 +24,26 @@ const handleBootstrap: Handle = async ({ event, resolve }) => {
 
 const handleAuth: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
-	const authed = await isAuthenticated(event.cookies);
-	event.locals.authenticated = authed;
-	event.locals.forceReset = false;
+	const user = await getSessionUser(event.cookies);
+	event.locals.user = user;
 
 	if (PUBLIC_ROUTES.has(path)) {
-		if (authed && path === '/login') throw redirect(303, '/');
+		if (user && path === '/login') throw redirect(303, '/');
 		return resolve(event);
 	}
 
-	if (!authed) {
+	if (!user) {
 		throw redirect(303, '/login');
 	}
 
-	const forceReset = await isForceReset();
-	event.locals.forceReset = forceReset;
-	if (forceReset && path !== RESET_ROUTE && !path.startsWith('/logout')) {
+	if (user.forceReset && path !== RESET_ROUTE && !path.startsWith('/logout')) {
 		throw redirect(303, RESET_ROUTE);
 	}
-	if (!forceReset && path === RESET_ROUTE) {
+	if (!user.forceReset && path === RESET_ROUTE) {
+		throw redirect(303, '/');
+	}
+
+	if (!user.isAdmin && ADMIN_PREFIXES.some((p) => path === p || path.startsWith(p + '/'))) {
 		throw redirect(303, '/');
 	}
 

@@ -6,18 +6,6 @@
 
 	let { data, form } = $props();
 
-	const errorMessage = $derived(
-		form?.error === 'current_password'
-			? m.settings_error_current_password()
-			: form?.error === 'mismatch'
-				? m.reset_error_mismatch()
-				: form?.error === 'short'
-					? m.reset_error_short()
-					: form?.error === 'required'
-						? m.validation_required()
-						: null
-	);
-
 	const COLOR_PALETTE = [
 		'#f6aace',
 		'#f8b88c',
@@ -31,7 +19,9 @@
 
 	const editing = $derived(data.editing);
 	const accountRaw = $derived(
-		form && 'raw' in form ? ((form.raw as Record<string, unknown> | null) ?? null) : null
+		form && 'raw' in form && form.raw && !('isAdmin' in (form.raw as object))
+			? ((form.raw as Record<string, unknown> | null) ?? null)
+			: null
 	);
 
 	const initial = $derived({
@@ -54,7 +44,9 @@
 	);
 
 	const accountErrors = $derived(
-		form && 'errors' in form ? ((form.errors as Record<string, boolean> | null) ?? null) : null
+		form && 'errors' in form
+			? ((form.errors as unknown as Record<string, boolean> | null) ?? null)
+			: null
 	);
 	const deleteError = $derived(
 		form && 'deleteError' in form ? form.deleteError === 'has_entries' : false
@@ -64,20 +56,21 @@
 		if (!confirm(m.accounts_confirm_delete())) e.preventDefault();
 	}
 
-	type Tab = 'accounts' | 'preferences' | 'credentials';
+	type Tab = 'accounts' | 'users' | 'preferences';
 	const tabs: { id: Tab; label: () => string }[] = [
 		{ id: 'accounts', label: () => m.accounts_title() },
-		{ id: 'preferences', label: () => m.settings_preferences() },
-		{ id: 'credentials', label: () => m.settings_credentials_title() }
+		{ id: 'users', label: () => m.users_title() },
+		{ id: 'preferences', label: () => m.settings_preferences() }
 	];
 
 	function pickInitialTab(): Tab {
 		const fromUrl = page.url.searchParams.get('tab');
-		if (fromUrl === 'accounts' || fromUrl === 'preferences' || fromUrl === 'credentials') {
+		if (fromUrl === 'accounts' || fromUrl === 'users' || fromUrl === 'preferences') {
 			return fromUrl;
 		}
+		if (page.url.searchParams.get('editUser')) return 'users';
 		if (page.url.searchParams.get('edit')) return 'accounts';
-		if (form && ('error' in form || 'saved' in form)) return 'credentials';
+		if (form && 'userError' in form) return 'users';
 		if (form && ('errors' in form || 'deleteError' in form || 'raw' in form)) return 'accounts';
 		if (form && 'currencyError' in form) return 'preferences';
 		if (form && 'localeError' in form) return 'preferences';
@@ -89,6 +82,47 @@
 	const CURRENCIES = ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'AUD', 'JPY'] as const;
 	let currencyForm = $state<HTMLFormElement | null>(null);
 	let languageForm = $state<HTMLFormElement | null>(null);
+
+	const userError = $derived(
+		form && 'userError' in form ? (form.userError as string | undefined) : undefined
+	);
+	const userErrorMessage = $derived(
+		userError === 'login_taken'
+			? m.users_error_login_taken()
+			: userError === 'invalid'
+				? m.users_error_invalid()
+				: userError === 'self'
+					? m.users_error_self_delete()
+					: userError === 'last_admin'
+						? m.users_error_last_admin()
+						: userError === 'not_found'
+							? m.users_error_not_found()
+							: null
+	);
+	const userCreated = $derived(page.url.searchParams.get('created') === '1');
+	const userSaved = $derived(page.url.searchParams.get('saved') === '1');
+
+	const editingUser = $derived(data.editingUser);
+	const editingSelf = $derived(
+		editingUser !== null && editingUser?.id === data.currentUserId
+	);
+	const userRaw = $derived(
+		form && 'raw' in form && form.raw && 'isAdmin' in (form.raw as object)
+			? (form.raw as { id?: number; login?: string; isAdmin?: boolean })
+			: null
+	);
+	const userInitial = $derived({
+		id: editingUser?.id ?? null,
+		login: (userRaw?.login as string | undefined) ?? editingUser?.login ?? '',
+		isAdmin:
+			userRaw?.isAdmin !== undefined
+				? Boolean(userRaw.isAdmin)
+				: (editingUser?.isAdmin ?? false)
+	});
+
+	function handleDeleteUser(e: SubmitEvent) {
+		if (!confirm(m.users_confirm_delete())) e.preventDefault();
+	}
 </script>
 
 <svelte:head><title>{m.settings_title()} · {m.app_name()}</title></svelte:head>
@@ -306,6 +340,206 @@
 				</aside>
 			</div>
 		</section>
+	{:else if activeTab === 'users'}
+		<section class="space-y-4">
+			{#if userErrorMessage}
+				<div class="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">
+					{userErrorMessage}
+				</div>
+			{/if}
+			{#if userCreated}
+				<div class="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+					{m.users_created()}
+				</div>
+			{/if}
+
+			<div class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+				<div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+					<table class="min-w-full text-sm">
+						<thead class="bg-slate-50 text-slate-600">
+							<tr class="text-left">
+								<th class="px-3 py-2 font-medium">{m.users_column_login()}</th>
+								<th class="px-3 py-2 font-medium">{m.users_column_role()}</th>
+								<th class="px-3 py-2 font-medium">{m.users_column_status()}</th>
+								<th class="px-3 py-2 text-right font-medium">{m.users_column_actions()}</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-100">
+							{#each data.users as u (u.id)}
+								{@const isSelf = u.id === data.currentUserId}
+								<tr>
+									<td class="px-3 py-2 font-medium">
+										{u.login}
+										{#if isSelf}
+											<span class="ml-1 text-xs font-normal text-slate-500"
+												>{m.users_self_badge()}</span
+											>
+										{/if}
+									</td>
+									<td class="px-3 py-2">
+										{#if u.isAdmin}
+											<span
+												class="inline-flex rounded-full bg-slate-900 px-2 py-0.5 text-xs font-medium text-white"
+												>{m.users_role_admin()}</span
+											>
+										{:else}
+											<span
+												class="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700"
+												>{m.users_role_user()}</span
+											>
+										{/if}
+									</td>
+									<td class="px-3 py-2 text-xs text-slate-600">
+										{#if u.forceReset}
+											<span class="text-amber-700">{m.users_status_pending_reset()}</span>
+										{:else}
+											{m.users_status_ok()}
+										{/if}
+									</td>
+									<td class="px-3 py-2 text-right">
+										<div class="flex justify-end gap-1">
+											<a
+												href={`/settings?editUser=${u.id}`}
+												title={m.action_edit()}
+												aria-label={m.action_edit()}
+												class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													width="16"
+													height="16"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												>
+													<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+													<path d="m15 5 4 4" />
+												</svg>
+											</a>
+											<form
+												method="POST"
+												action="?/deleteUser"
+												use:enhance
+												onsubmit={handleDeleteUser}
+												class="contents"
+											>
+												<input type="hidden" name="id" value={u.id} />
+												<button
+													type="submit"
+													disabled={isSelf}
+													title={m.action_delete()}
+													aria-label={m.action_delete()}
+													class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+												>
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														width="16"
+														height="16"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														stroke-width="2"
+														stroke-linecap="round"
+														stroke-linejoin="round"
+													>
+														<path d="M3 6h18" />
+														<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+														<path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+													</svg>
+												</button>
+											</form>
+										</div>
+									</td>
+								</tr>
+							{/each}
+						</tbody>
+					</table>
+				</div>
+
+				<aside class="space-y-3">
+					<h3 class="text-sm font-medium text-slate-700">
+						{editingUser ? m.users_form_edit_title() : m.users_add()}
+					</h3>
+					<form
+						method="POST"
+						action="?/saveUser"
+						use:enhance
+						class="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+					>
+						{#if userInitial.id}
+							<input type="hidden" name="id" value={userInitial.id} />
+						{/if}
+
+						<label class="block space-y-1 text-sm">
+							<span class="font-medium text-slate-700">{m.users_form_login()}</span>
+							<input
+								name="login"
+								type="text"
+								autocomplete="off"
+								required
+								value={userInitial.login}
+								class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+							/>
+						</label>
+
+						<label class="block space-y-1 text-sm">
+							<span class="font-medium text-slate-700">
+								{editingUser ? m.users_form_password_optional() : m.users_form_password()}
+							</span>
+							<input
+								name="password"
+								type="password"
+								autocomplete="new-password"
+								required={!editingUser}
+								minlength="8"
+								placeholder={editingUser ? m.users_form_password_unchanged() : ''}
+								class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+							/>
+						</label>
+
+						{#if editingSelf}
+							<input type="hidden" name="isAdmin" value="on" />
+						{/if}
+						<label class="flex items-center gap-2 text-sm">
+							<input
+								name="isAdmin"
+								type="checkbox"
+								checked={userInitial.isAdmin}
+								disabled={editingSelf}
+								class="rounded border-slate-300 text-slate-900 focus:ring-slate-500 disabled:opacity-50"
+							/>
+							<span class="font-medium text-slate-700">{m.users_form_is_admin()}</span>
+						</label>
+
+						<div class="flex justify-end gap-2">
+							{#if editingUser}
+								<a
+									href="/settings?tab=users"
+									class="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+								>
+									{m.action_cancel()}
+								</a>
+							{/if}
+							<button
+								type="submit"
+								class="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800"
+							>
+								{m.action_save()}
+							</button>
+						</div>
+					</form>
+
+					{#if userSaved}
+						<p class="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+							{m.settings_saved()}
+						</p>
+					{/if}
+				</aside>
+			</div>
+		</section>
 	{:else if activeTab === 'preferences'}
 		<section class="space-y-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
 			<form method="POST" action="?/language" use:enhance bind:this={languageForm} class="space-y-2">
@@ -340,85 +574,6 @@
 						{/each}
 					</select>
 				</label>
-			</form>
-		</section>
-	{:else if activeTab === 'credentials'}
-		<section class="space-y-3 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-			<form method="POST" action="?/credentials" use:enhance class="space-y-4">
-				<div class="space-y-1 text-sm">
-					<span class="font-medium text-slate-700">{m.settings_credentials_login()}</span>
-					<p class="font-mono text-sm text-slate-500">{data.login}</p>
-				</div>
-
-				<label class="block space-y-1 text-sm">
-					<span class="font-medium text-slate-700"
-						>{m.settings_credentials_current_password()}</span
-					>
-					<input
-						name="currentPassword"
-						type="password"
-						autocomplete="current-password"
-						required
-						class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-					/>
-				</label>
-
-				<label class="block space-y-1 text-sm">
-					<span class="font-medium text-slate-700">{m.reset_new_login()}</span>
-					<input
-						name="newLogin"
-						type="text"
-						autocomplete="username"
-						required
-						value={(form && 'newLogin' in form ? (form.newLogin as string) : null) ?? data.login}
-						class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-					/>
-				</label>
-
-				<label class="block space-y-1 text-sm">
-					<span class="font-medium text-slate-700">{m.settings_credentials_new_password()}</span>
-					<input
-						name="newPassword"
-						type="password"
-						autocomplete="new-password"
-						required
-						minlength="8"
-						class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-					/>
-				</label>
-
-				<label class="block space-y-1 text-sm">
-					<span class="font-medium text-slate-700"
-						>{m.settings_credentials_confirm_password()}</span
-					>
-					<input
-						name="confirmPassword"
-						type="password"
-						autocomplete="new-password"
-						required
-						minlength="8"
-						class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-					/>
-				</label>
-
-				{#if errorMessage}
-					<p class="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">{errorMessage}</p>
-				{/if}
-
-				{#if form && 'saved' in form && form.saved}
-					<p class="rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-						{m.settings_saved()}
-					</p>
-				{/if}
-
-				<div class="flex justify-end">
-					<button
-						type="submit"
-						class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
-					>
-						{m.action_save()}
-					</button>
-				</div>
 			</form>
 		</section>
 	{/if}

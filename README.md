@@ -12,6 +12,7 @@ The idea: a single page that answers the question *"how much do I really pay eve
 - See your **smoothed monthly cost** at a glance (quarterly and yearly charges are spread evenly across months) along with the **total yearly cost**.
 - Split expenses across several *accounts* (for example "Shared", "Me", "Partner") and compare totals.
 - Pause a subscription temporarily without deleting it (handy for free trials or holidays).
+- Share the same data with the rest of the household: each person logs in with their own credentials.
 
 ## Features
 
@@ -19,10 +20,11 @@ The idea: a single page that answers the question *"how much do I really pay eve
 - **Charts**: monthly breakdown by account (pie), subscriptions vs charges by account (bars), overall subscription/charge share (donut).
 - **Filterable list** of entries: by account, by type (subscription / charge), by periodicity (monthly / quarterly / yearly), by status (active / inactive).
 - **Customisable accounts**: name, colour, display order.
+- **Multi-user with roles**: admins manage accounts and users; regular users can view the dashboard and edit entries.
 - **Bilingual interface**: English and French, switchable any time from the settings.
 - **Multi-currency**: pick from EUR, USD, GBP, CHF, CAD, AUD or JPY; each amount renders in its native format (e.g. `1 234,56 €` for euros, `$1,234.56` for US dollars).
 - **Responsive**: comfortable to use on a phone.
-- **Secure sign-in**: a single login, hashed password, signed session cookies.
+- **Secure sign-in**: bcrypt password hashes, signed session cookies, forced password change on first login.
 
 ## Getting started
 
@@ -46,25 +48,28 @@ For long-term use, run the compiled build behind a reverse proxy (nginx, Caddy, 
 
 ### First sign-in
 
-Default credentials:
+On first launch Billio creates an initial **admin** account with the credentials:
 
 - **Login**: `admin`
 - **Password**: `admin`
 
-You'll be **forced to change them** on first sign-in. Pick a password of at least 8 characters.
+You'll be **forced to change them** on first sign-in. Pick a password of at least 8 characters. From there on, all user and credential management happens in the app.
 
 ## Using Billio
 
-1. **Create your accounts** in *Settings → Accounts*. An account groups related expenses (per household, per person, per project, and so on). Each account has a colour that's reused in the charts.
-2. **Add your entries** from the dashboard. For each one, fill in:
+1. **Create your accounts** in *Settings → Accounts* (admins only). An account groups related expenses (per household, per person, per project, and so on). Each account has a colour that's reused in the charts.
+2. **Invite the rest of the household** in *Settings → Users* (admins only). For each person you can choose whether they're a regular user or an admin. New users are asked to set their password on first sign-in.
+3. **Add your entries** from the dashboard. For each one, fill in:
    - a **label** (for example *Netflix*, *Rent*, *Car insurance*),
    - the **type**: *subscription* or *charge*,
    - the **periodicity**: monthly, quarterly or yearly,
    - the **amount**,
    - the **account** the entry belongs to,
    - optionally the day of the month and a note.
-3. **Read the dashboard**. The smoothed monthly total is computed automatically (a yearly charge of €120 shows up as €10/month smoothed).
-4. **Deactivate** an entry instead of deleting it when the expense is just paused: it drops out of the totals but stays visible under the *Inactive* filter.
+4. **Read the dashboard**. The smoothed monthly total is computed automatically (a yearly charge of €120 shows up as €10/month smoothed).
+5. **Deactivate** an entry instead of deleting it when the expense is just paused: it drops out of the totals but stays visible under the *Inactive* filter.
+
+Accounts and entries are shared across all users of the same instance, so everyone sees the same household budget.
 
 ## Storage and backup
 

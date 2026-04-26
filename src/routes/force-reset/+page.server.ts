@@ -1,9 +1,12 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import { updateCredentials } from '$lib/server/auth';
+import { updateOwnCredentials } from '$lib/server/auth';
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	default: async ({ request, locals }) => {
+		const user = locals.user;
+		if (!user) throw redirect(303, '/login');
+
 		const form = await request.formData();
 		const login = String(form.get('login') ?? '').trim();
 		const password = String(form.get('password') ?? '');
@@ -13,7 +16,7 @@ export const actions: Actions = {
 		if (password.length < 8) return fail(400, { login, error: 'short' });
 		if (password !== confirm) return fail(400, { login, error: 'mismatch' });
 
-		await updateCredentials(login, password);
+		await updateOwnCredentials(user.id, login, password);
 		throw redirect(303, '/');
 	}
 };

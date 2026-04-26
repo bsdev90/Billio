@@ -4,8 +4,7 @@ import { isSupportedCurrency, type Currency } from '$lib/format';
 import { locales, baseLocale } from '$lib/paraglide/runtime';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
-	const [login, currencyRaw, localeRaw] = await Promise.all([
-		getSetting('auth.login'),
+	const [currencyRaw, localeRaw] = await Promise.all([
 		getSetting('app.currency'),
 		getSetting('app.locale')
 	]);
@@ -14,9 +13,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	const locale =
 		localeRaw && (locales as readonly string[]).includes(localeRaw) ? localeRaw : baseLocale;
 	return {
-		authenticated: locals.authenticated,
-		forceReset: locals.forceReset,
-		login: login ?? '',
+		user: locals.user,
 		currency,
 		locale
 	};

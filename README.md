@@ -28,13 +28,68 @@ The idea: a single page that answers the question *"how much do I really pay eve
 
 ## Getting started
 
-Billio is self-hosted: you install it on your own machine or a small server, and access it from your browser.
+Billio is self-hosted: you install it on your own machine or a small server, and access it from your browser. Two ways to run it.
+
+### With Docker (recommended)
+
+Requirements: **Docker** and **Docker Compose**.
+
+```sh
+docker compose up -d --build
+```
+
+The app is then reachable at `http://localhost:3000`. The SQLite database is stored on the host in `./data/local.db` thanks to a bind mount, so it survives container rebuilds and updates. Back it up by copying that folder.
+
+To pull a new version of the code and rebuild:
+
+```sh
+git pull
+docker compose up -d --build
+```
+
+To stop the app:
+
+```sh
+docker compose down
+```
+
+### Run from a published image (Unraid, NAS, remote server)
+
+Each push to `main` of this repository builds and publishes a multi-arch image (`linux/amd64` and `linux/arm64`) to **GitHub Container Registry** at `ghcr.io/bsdev90/billio`. You don't need to clone the source to deploy: paste the snippet below in your host's Compose UI (Unraid Compose Manager, Portainer stack, Dockge, plain `docker-compose.yml` on a server, etc.).
+
+```yaml
+services:
+  billio:
+    image: ghcr.io/bsdev90/billio:latest
+    container_name: billio
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Adjust the host path to wherever you keep app data.
+      # On Unraid the convention is /mnt/user/appdata/billio
+      - ./data:/data
+    environment:
+      # Optional. Leave unset to auto-generate one and store it in the DB.
+      # APP_SESSION_SECRET: change-me
+```
+
+Then `docker compose up -d` (or hit *Apply* in the Unraid UI). The app listens on port `3000`; map it to whatever port you want on the host side. The database file appears at `<host data path>/local.db` and is the only thing you need to back up.
+
+Image tags available on GHCR:
+
+- `latest`: the tip of `main`
+- `v1.2.3`, `1.2`, `1`: published when a Git tag like `v1.2.3` is pushed
+
+> **First push only**: by default the GHCR package created by the GitHub Action is private. To let others (or your Unraid box without auth) pull it, go to GitHub → your profile → *Packages* → *billio* → *Package settings* → *Change visibility* → *Public*.
+
+### Without Docker
 
 Requirements: **Node.js 20 or newer**.
 
 ```sh
 cp .env.example .env
-# Set APP_SESSION_SECRET in .env
+# Set APP_SESSION_SECRET in .env (optional; one is auto-generated and stored in the DB if absent)
 # You can generate one with: openssl rand -hex 32
 
 npm install

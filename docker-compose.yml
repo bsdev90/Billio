@@ -1,0 +1,18 @@
+services:
+  billio:
+    # Pulls the published image on `docker compose up`.
+    # Falls back to building from the local source if you run `docker compose up --build`.
+    image: ghcr.io/bsdev90/billio:latest
+    build: .
+    container_name: billio
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # SQLite database lives on the host so it survives container rebuilds.
+      - ./data:/data
+    environment:
+      # Optional: provide a fixed HMAC secret (otherwise one is auto-generated and stored in the DB).
+      # APP_SESSION_SECRET: change-me
+      # Optional: session lifetime in seconds (default 30 days).
+      # APP_SESSION_TTL: 2592000

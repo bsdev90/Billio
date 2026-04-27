@@ -29,3 +29,6 @@ project.inlang/cache/
 *.db-shm
 *.db-wal
 *.db-journal
+
+# Docker bind-mount target for the SQLite database
+/data

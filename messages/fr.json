@@ -94,6 +94,8 @@
 	"accounts_form_name": "Nom",
 	"accounts_form_color": "Couleur",
 	"accounts_form_position": "Position",
+	"accounts_form_hidden_by_default": "Masqué par défaut",
+	"accounts_form_hidden_by_default_hint": "Le compte est caché à l'arrivée sur le tableau de bord. Cliquer sur sa pastille pour l'afficher.",
 	"accounts_column_name": "Nom",
 	"accounts_column_position": "Position",
 	"accounts_column_entries": "Entrées",

@@ -15,6 +15,13 @@
       "when": 1777201625626,
       "tag": "0001_big_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777800000000,
+      "tag": "0002_hidden_accounts",
+      "breakpoints": true
     }
   ]
 }

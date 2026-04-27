@@ -85,7 +85,8 @@
 		id: editingAccount?.id ?? null,
 		name: editingAccount?.name ?? '',
 		color: editingAccount?.color ?? COLOR_PALETTE_DEFAULT,
-		position: String(editingAccount?.position ?? 0)
+		position: String(editingAccount?.position ?? 0),
+		hiddenByDefault: editingAccount?.hiddenByDefault ?? false
 	});
 
 	let userModalOpen = $state(false);

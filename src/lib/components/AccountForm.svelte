@@ -8,6 +8,7 @@
 		name: string;
 		color: string;
 		position: string;
+		hiddenByDefault: boolean;
 	};
 
 	let {
@@ -108,6 +109,21 @@
 			value={initial.position}
 			class="block w-full rounded-md border border-slate-300 px-3 py-2 text-sm tabular-nums"
 		/>
+	</label>
+
+	<label class="flex items-start gap-2 text-sm">
+		<input
+			name="hiddenByDefault"
+			type="checkbox"
+			checked={initial.hiddenByDefault}
+			class="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-500"
+		/>
+		<span class="space-y-0.5">
+			<span class="block font-medium text-slate-700">{m.accounts_form_hidden_by_default()}</span>
+			<span class="block text-xs text-slate-500"
+				>{m.accounts_form_hidden_by_default_hint()}</span
+			>
+		</span>
 	</label>
 
 	<div class="flex justify-end gap-2 border-t border-slate-200 pt-4">

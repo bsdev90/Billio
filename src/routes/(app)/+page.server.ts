@@ -31,10 +31,13 @@ function parseFilters(url: URL): EntryFilter {
 
 export const load: PageServerLoad = async ({ url }) => {
 	const filter = parseFilters(url);
-	const [summary, rows, accounts] = await Promise.all([
-		computeSummary({ accountIds: filter.accountIds }),
-		listEntries(filter),
-		listAccountsForSelect()
+	const accounts = await listAccountsForSelect();
+	const effectiveAccountIds =
+		filter.accountIds ?? accounts.filter((a) => !a.hiddenByDefault).map((a) => a.id);
+	const effectiveFilter: EntryFilter = { ...filter, accountIds: effectiveAccountIds };
+	const [summary, rows] = await Promise.all([
+		computeSummary({ accountIds: effectiveAccountIds }),
+		listEntries(effectiveFilter)
 	]);
 	return { summary, entries: rows, accounts, filter };
 };

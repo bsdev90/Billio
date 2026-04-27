@@ -8,6 +8,7 @@ export const accounts = sqliteTable(
 		name: text('name').notNull(),
 		color: text('color').notNull(),
 		position: integer('position').notNull().default(0),
+		hiddenByDefault: integer('hidden_by_default', { mode: 'boolean' }).notNull().default(false),
 		createdAt: integer('created_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date()),

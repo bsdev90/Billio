@@ -65,15 +65,21 @@ export async function computeSummary(opts: { accountIds?: number[] } = {}): Prom
 		.orderBy(asc(accounts.position), asc(accounts.id));
 
 	const filteredAccounts =
-		opts.accountIds && opts.accountIds.length > 0
+		opts.accountIds !== undefined
 			? accountList.filter((a) => opts.accountIds!.includes(a.id))
 			: accountList;
 
-	const entriesWhere =
-		opts.accountIds && opts.accountIds.length > 0
-			? and(eq(entries.isActive, true), inArray(entries.accountId, opts.accountIds))
-			: eq(entries.isActive, true);
-	const activeEntries = await db.select().from(entries).where(entriesWhere);
+	const activeEntries =
+		opts.accountIds !== undefined && opts.accountIds.length === 0
+			? []
+			: await db
+					.select()
+					.from(entries)
+					.where(
+						opts.accountIds !== undefined
+							? and(eq(entries.isActive, true), inArray(entries.accountId, opts.accountIds))
+							: eq(entries.isActive, true)
+					);
 
 	const byAccount = new Map<number, SummaryRow>();
 	for (const account of filteredAccounts) {

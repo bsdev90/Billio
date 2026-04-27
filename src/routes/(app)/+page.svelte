@@ -109,10 +109,14 @@
 		gotoUrl(url);
 	}
 
+	const defaultActiveAccountIds = $derived(
+		new Set(data.accounts.filter((a) => !a.hiddenByDefault).map((a) => a.id))
+	);
+
 	const activeAccountIds = $derived(
 		data.filter.accountIds && data.filter.accountIds.length > 0
 			? new Set(data.filter.accountIds)
-			: new Set(data.accounts.map((a) => a.id))
+			: defaultActiveAccountIds
 	);
 
 	function toggleAccount(id: number) {
@@ -120,7 +124,10 @@
 		if (next.has(id)) next.delete(id);
 		else next.add(id);
 		const url = new URL(window.location.href);
-		if (next.size === 0 || next.size === data.accounts.length) {
+		const matchesDefault =
+			next.size === defaultActiveAccountIds.size &&
+			[...next].every((nId) => defaultActiveAccountIds.has(nId));
+		if (matchesDefault) {
 			url.searchParams.delete('accounts');
 		} else {
 			url.searchParams.set('accounts', [...next].join(','));

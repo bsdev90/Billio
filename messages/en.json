@@ -94,6 +94,8 @@
 	"accounts_form_name": "Name",
 	"accounts_form_color": "Color",
 	"accounts_form_position": "Position",
+	"accounts_form_hidden_by_default": "Hidden by default",
+	"accounts_form_hidden_by_default_hint": "The account starts hidden on the dashboard. Click its pill to show it.",
 	"accounts_column_name": "Name",
 	"accounts_column_position": "Position",
 	"accounts_column_entries": "Entries",

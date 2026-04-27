@@ -85,6 +85,9 @@ export type EntryFilter = {
 };
 
 export async function listEntries(filter: EntryFilter = {}) {
+	if (filter.accountIds !== undefined && filter.accountIds.length === 0) {
+		return [];
+	}
 	const conditions: SQL[] = [];
 	if (filter.accountIds && filter.accountIds.length > 0) {
 		conditions.push(inArray(entries.accountId, filter.accountIds));
@@ -181,7 +184,12 @@ export async function deleteEntry(id: number) {
 
 export async function listAccountsForSelect() {
 	return db
-		.select({ id: accounts.id, name: accounts.name, color: accounts.color })
+		.select({
+			id: accounts.id,
+			name: accounts.name,
+			color: accounts.color,
+			hiddenByDefault: accounts.hiddenByDefault
+		})
 		.from(accounts)
 		.orderBy(asc(accounts.position), asc(accounts.id));
 }

@@ -9,7 +9,8 @@ export const accountSchema = z.object({
 		.string()
 		.trim()
 		.regex(/^#[0-9a-fA-F]{6}$/, 'hex'),
-	position: z.coerce.number().int().min(0).default(0)
+	position: z.coerce.number().int().min(0).default(0),
+	hiddenByDefault: z.coerce.boolean().default(false)
 });
 
 export type AccountInput = z.infer<typeof accountSchema>;
@@ -22,12 +23,14 @@ export function parseAccountForm(form: FormData): {
 	const raw = {
 		name: form.get('name'),
 		color: form.get('color'),
-		position: form.get('position')
+		position: form.get('position'),
+		hiddenByDefault: form.get('hiddenByDefault')
 	};
 	const result = accountSchema.safeParse({
 		name: typeof raw.name === 'string' ? raw.name : '',
 		color: typeof raw.color === 'string' ? raw.color : '',
-		position: raw.position ?? 0
+		position: raw.position ?? 0,
+		hiddenByDefault: raw.hiddenByDefault === 'on' || raw.hiddenByDefault === 'true'
 	});
 	if (!result.success) {
 		const errors: Record<string, string> = {};
@@ -47,6 +50,7 @@ export async function listAccountsWithCounts() {
 			name: accounts.name,
 			color: accounts.color,
 			position: accounts.position,
+			hiddenByDefault: accounts.hiddenByDefault,
 			entriesCount: count(entries.id)
 		})
 		.from(accounts)
@@ -67,7 +71,8 @@ export async function createAccount(input: AccountInput) {
 		.values({
 			name: input.name,
 			color: input.color,
-			position: input.position
+			position: input.position,
+			hiddenByDefault: input.hiddenByDefault
 		})
 		.returning();
 	return row;
@@ -80,6 +85,7 @@ export async function updateAccount(id: number, input: AccountInput) {
 			name: input.name,
 			color: input.color,
 			position: input.position,
+			hiddenByDefault: input.hiddenByDefault,
 			updatedAt: new Date()
 		})
 		.where(eq(accounts.id, id))

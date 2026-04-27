@@ -6,34 +6,20 @@ import { locales, baseLocale } from '$lib/paraglide/runtime';
 import {
 	createAccount,
 	deleteAccount,
-	getAccount,
 	listAccountsWithCounts,
 	parseAccountForm,
 	updateAccount
 } from '$lib/server/accounts-service';
-import {
-	createUser,
-	deleteUser,
-	getUser,
-	listUsers,
-	updateUser
-} from '$lib/server/users-service';
+import { createUser, deleteUser, listUsers, updateUser } from '$lib/server/users-service';
 
-export const load: PageServerLoad = async ({ url, locals }) => {
+export const load: PageServerLoad = async ({ locals }) => {
 	if (!locals.user?.isAdmin) throw redirect(303, '/');
-	const editAccountId = Number(url.searchParams.get('edit'));
-	const editUserId = Number(url.searchParams.get('editUser'));
-	const [accounts, editingAccount, usersList, editingUser, currencyRaw, localeRaw] =
-		await Promise.all([
-			listAccountsWithCounts(),
-			Number.isFinite(editAccountId) && editAccountId > 0
-				? getAccount(editAccountId)
-				: Promise.resolve(null),
-			listUsers(),
-			Number.isFinite(editUserId) && editUserId > 0 ? getUser(editUserId) : Promise.resolve(null),
-			getSetting('app.currency'),
-			getSetting('app.locale')
-		]);
+	const [accounts, usersList, currencyRaw, localeRaw] = await Promise.all([
+		listAccountsWithCounts(),
+		listUsers(),
+		getSetting('app.currency'),
+		getSetting('app.locale')
+	]);
 	const currency: Currency =
 		currencyRaw && isSupportedCurrency(currencyRaw) ? currencyRaw : 'EUR';
 	const locale =
@@ -41,9 +27,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	return {
 		currentUserId: locals.user.id,
 		accounts,
-		editing: editingAccount,
 		users: usersList,
-		editingUser,
 		currency,
 		locale
 	};

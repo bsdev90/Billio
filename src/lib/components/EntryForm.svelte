@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { contrastText, SUBSCRIPTION_COLOR, CHARGE_COLOR } from '$lib/budget-utils';
 
 	type AccountOption = { id: number; name: string; color: string };
@@ -21,13 +22,21 @@
 		initial,
 		errors,
 		submitLabel,
-		cancelHref
+		cancelHref,
+		action,
+		onSuccess,
+		onCancel,
+		bare = false
 	}: {
 		accounts: AccountOption[];
 		initial: EntryInit;
 		errors?: Record<string, string>;
 		submitLabel: string;
-		cancelHref: string;
+		cancelHref?: string;
+		action?: string;
+		onSuccess?: () => void;
+		onCancel?: () => void;
+		bare?: boolean;
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
@@ -58,8 +67,20 @@
 
 <form
 	method="POST"
-	use:enhance
-	class="space-y-5 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
+	{action}
+	use:enhance={() => {
+		return async ({ result, update }) => {
+			if (onSuccess && (result.type === 'redirect' || result.type === 'success')) {
+				onSuccess();
+				await invalidateAll();
+			} else {
+				await update();
+			}
+		};
+	}}
+	class={bare
+		? 'space-y-5'
+		: 'space-y-5 rounded-lg border border-slate-200 bg-white p-4 shadow-sm sm:p-6'}
 >
 	<input type="hidden" name="type" value={selectedType} />
 	<input type="hidden" name="accountId" value={selectedAccountId ?? ''} />
@@ -193,12 +214,22 @@
 	</label>
 
 	<div class="flex justify-end gap-2 border-t border-slate-200 pt-4">
-		<a
-			href={cancelHref}
-			class="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
-		>
-			{m.action_cancel()}
-		</a>
+		{#if onCancel}
+			<button
+				type="button"
+				onclick={() => onCancel?.()}
+				class="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+			>
+				{m.action_cancel()}
+			</button>
+		{:else if cancelHref}
+			<a
+				href={cancelHref}
+				class="rounded-md px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+			>
+				{m.action_cancel()}
+			</a>
+		{/if}
 		<button
 			type="submit"
 			class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"

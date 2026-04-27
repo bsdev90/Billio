@@ -2,6 +2,7 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { formatCents } from '$lib/format';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import {
 		monthlyLissedCents,
 		contrastText,
@@ -12,8 +13,61 @@
 	import PieChart from '$lib/components/PieChart.svelte';
 	import BarsChart from '$lib/components/BarsChart.svelte';
 	import DonutChart from '$lib/components/DonutChart.svelte';
+	import EntryForm from '$lib/components/EntryForm.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 
 	let { data } = $props();
+
+	type EntryRow = (typeof data.entries)[number];
+
+	let entryModalOpen = $state(false);
+	let editingEntry = $state<EntryRow | null>(null);
+
+	function openNewEntry() {
+		editingEntry = null;
+		entryModalOpen = true;
+	}
+
+	function openEditEntry(entry: EntryRow) {
+		editingEntry = entry;
+		entryModalOpen = true;
+	}
+
+	const entryFormInitial = $derived(
+		editingEntry
+			? {
+					label: editingEntry.label,
+					type: editingEntry.type,
+					accountId: editingEntry.accountId,
+					periodicity: editingEntry.periodicity,
+					amount: (editingEntry.amountCents / 100).toFixed(2).replace('.', ','),
+					day: editingEntry.day != null ? String(editingEntry.day) : '',
+					notes: editingEntry.notes ?? '',
+					isActive: editingEntry.isActive
+				}
+			: {
+					label: '',
+					type: 'abonnement' as const,
+					accountId: data.accounts[0]?.id ?? null,
+					periodicity: 'mensuel' as const,
+					amount: '',
+					day: '',
+					notes: '',
+					isActive: true
+				}
+	);
+
+	const entryFormAction = $derived(
+		editingEntry ? `/entries/${editingEntry.id}/edit` : '/entries/new'
+	);
+
+	const entryFormTitle = $derived(
+		editingEntry ? m.entries_form_edit_title() : m.entries_form_new_title()
+	);
+
+	function gotoUrl(url: URL) {
+		goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+	}
 
 	const summary = $derived(data.summary);
 
@@ -52,7 +106,7 @@
 		const url = new URL(window.location.href);
 		if (value === '') url.searchParams.delete(name);
 		else url.searchParams.set(name, value);
-		window.location.href = url.toString();
+		gotoUrl(url);
 	}
 
 	const activeAccountIds = $derived(
@@ -71,7 +125,7 @@
 		} else {
 			url.searchParams.set('accounts', [...next].join(','));
 		}
-		window.location.href = url.toString();
+		gotoUrl(url);
 	}
 
 	function periodicityLabel(p: 'mensuel' | 'trimestriel' | 'annuel') {
@@ -245,12 +299,13 @@
 					</select>
 				</label>
 
-				<a
-					href="/entries/new"
-					class="col-span-3 rounded-md bg-slate-900 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-slate-800 sm:col-span-1 sm:ml-auto"
+				<button
+					type="button"
+					onclick={openNewEntry}
+					class="col-span-3 cursor-pointer rounded-md bg-slate-900 px-3 py-1.5 text-center text-sm font-medium text-white hover:bg-slate-800 sm:col-span-1 sm:ml-auto"
 				>
 					+ {m.entries_add()}
-				</a>
+				</button>
 			</div>
 
 			{#if data.entries.length === 0}
@@ -406,8 +461,9 @@
 									</td>
 									<td class="px-3 py-2 text-right md:px-4">
 										<div class="flex justify-end gap-1">
-											<a
-												href={`/entries/${entry.id}/edit`}
+											<button
+												type="button"
+												onclick={() => openEditEntry(entry)}
 												title={m.entries_action_edit()}
 												aria-label={m.entries_action_edit()}
 												class="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
@@ -426,7 +482,7 @@
 													<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
 													<path d="m15 5 4 4" />
 												</svg>
-											</a>
+											</button>
 
 											<form
 												method="POST"
@@ -471,3 +527,21 @@
 		</div>
 	{/if}
 </div>
+
+<Modal
+	open={entryModalOpen}
+	title={entryFormTitle}
+	onClose={() => (entryModalOpen = false)}
+>
+	{#key editingEntry?.id ?? 'new'}
+		<EntryForm
+			accounts={data.accounts}
+			initial={entryFormInitial}
+			submitLabel={m.action_save()}
+			action={entryFormAction}
+			onSuccess={() => (entryModalOpen = false)}
+			onCancel={() => (entryModalOpen = false)}
+			bare
+		/>
+	{/key}
+</Modal>

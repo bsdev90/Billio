@@ -8,6 +8,10 @@ const config = {
 	},
 	kit: {
 		adapter: adapter(),
+		// Self-hosted deployments are typically reached through a host:port that
+		// SvelteKit's default Origin/Host check flags as cross-site. Anti-CSRF is
+		// still enforced by the session cookie, which is sameSite=strict.
+		csrf: { checkOrigin: false },
 		typescript: {
 			config: (config) => ({
 				...config,

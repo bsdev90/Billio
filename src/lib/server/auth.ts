@@ -59,7 +59,10 @@ export async function createSession(cookies: Cookies, userId: number): Promise<v
 		path: '/',
 		httpOnly: true,
 		sameSite: 'strict',
-		secure: env.NODE_ENV === 'production',
+		// Self-hosted deployments often run on plain HTTP (LAN, port mappings).
+		// Browsers drop Secure cookies on HTTP, so we never set the flag and
+		// rely on sameSite=strict to block cross-site requests instead.
+		secure: false,
 		maxAge: SESSION_TTL_SECONDS
 	});
 }

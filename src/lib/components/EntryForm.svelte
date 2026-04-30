@@ -2,13 +2,15 @@
 	import { m } from '$lib/paraglide/messages.js';
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { contrastText, SUBSCRIPTION_COLOR, CHARGE_COLOR } from '$lib/budget-utils';
+	import { contrastText, SUBSCRIPTION_COLOR, CHARGE_COLOR, SAVINGS_COLOR } from '$lib/budget-utils';
 
 	type AccountOption = { id: number; name: string; color: string };
 
+	type EntryType = 'abonnement' | 'charge' | 'epargne';
+
 	type EntryInit = {
 		label: string;
-		type: 'abonnement' | 'charge';
+		type: EntryType;
 		accountId: number | null;
 		periodicity: 'mensuel' | 'trimestriel' | 'annuel';
 		amount: string;
@@ -40,15 +42,16 @@
 	} = $props();
 
 	// svelte-ignore state_referenced_locally
-	let selectedType = $state<'abonnement' | 'charge'>(initial.type);
+	let selectedType = $state<EntryType>(initial.type);
 	// svelte-ignore state_referenced_locally
 	let selectedAccountId = $state<number | null>(initial.accountId);
 	// svelte-ignore state_referenced_locally
 	let selectedPeriodicity = $state<'mensuel' | 'trimestriel' | 'annuel'>(initial.periodicity);
 
-	const typeOptions: Array<{ value: 'abonnement' | 'charge'; label: string; color: string }> = [
+	const typeOptions: Array<{ value: EntryType; label: string; color: string }> = [
 		{ value: 'abonnement', label: m.type_subscription(), color: SUBSCRIPTION_COLOR },
-		{ value: 'charge', label: m.type_charge(), color: CHARGE_COLOR }
+		{ value: 'charge', label: m.type_charge(), color: CHARGE_COLOR },
+		{ value: 'epargne', label: m.type_savings(), color: SAVINGS_COLOR }
 	];
 
 	const periodicityOptions: Array<{

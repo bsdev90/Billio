@@ -10,16 +10,17 @@ export type SummaryRow = {
 	accountId: number | null;
 	accountName: string;
 	accountColor: string | null;
-	counts: { abonnement: number; charge: number };
+	counts: { abonnement: number; charge: number; epargne: number };
 	countsByPeriodicity: PeriodCounts;
 	countsByPeriodicityByType: {
 		abonnement: PeriodCounts;
 		charge: PeriodCounts;
+		epargne: PeriodCounts;
 	};
 	rawCents: { monthly: number; quarterly: number; yearly: number };
 	totalsCents: { monthly: number; yearly: number };
 	/** Monthly smoothed amount per type (used for bars chart and donut chart) */
-	lissedByType: { abonnement: number; charge: number };
+	lissedByType: { abonnement: number; charge: number; epargne: number };
 };
 
 export type Summary = {
@@ -36,15 +37,16 @@ function emptyRow(
 		accountId,
 		accountName,
 		accountColor,
-		counts: { abonnement: 0, charge: 0 },
+		counts: { abonnement: 0, charge: 0, epargne: 0 },
 		countsByPeriodicity: { monthly: 0, quarterly: 0, yearly: 0 },
 		countsByPeriodicityByType: {
 			abonnement: { monthly: 0, quarterly: 0, yearly: 0 },
-			charge: { monthly: 0, quarterly: 0, yearly: 0 }
+			charge: { monthly: 0, quarterly: 0, yearly: 0 },
+			epargne: { monthly: 0, quarterly: 0, yearly: 0 }
 		},
 		rawCents: { monthly: 0, quarterly: 0, yearly: 0 },
 		totalsCents: { monthly: 0, yearly: 0 },
-		lissedByType: { abonnement: 0, charge: 0 }
+		lissedByType: { abonnement: 0, charge: 0, epargne: 0 }
 	};
 }
 
@@ -90,8 +92,7 @@ export async function computeSummary(opts: { accountIds?: number[] } = {}): Prom
 		const row = byAccount.get(entry.accountId);
 		if (!row) continue;
 
-		if (entry.type === 'abonnement') row.counts.abonnement += 1;
-		else row.counts.charge += 1;
+		row.counts[entry.type] += 1;
 
 		const periodicityKey =
 			entry.periodicity === 'mensuel'
@@ -103,9 +104,7 @@ export async function computeSummary(opts: { accountIds?: number[] } = {}): Prom
 		row.countsByPeriodicity[periodicityKey] += 1;
 		row.countsByPeriodicityByType[entry.type][periodicityKey] += 1;
 
-		const lissed = monthlyLissedCents(entry);
-		if (entry.type === 'abonnement') row.lissedByType.abonnement += lissed;
-		else row.lissedByType.charge += lissed;
+		row.lissedByType[entry.type] += monthlyLissedCents(entry);
 	}
 
 	const rows = Array.from(byAccount.values()).map(finaliseTotals);
@@ -114,14 +113,17 @@ export async function computeSummary(opts: { accountIds?: number[] } = {}): Prom
 	for (const row of rows) {
 		total.counts.abonnement += row.counts.abonnement;
 		total.counts.charge += row.counts.charge;
+		total.counts.epargne += row.counts.epargne;
 		for (const k of ['monthly', 'quarterly', 'yearly'] as const) {
 			total.countsByPeriodicity[k] += row.countsByPeriodicity[k];
 			total.countsByPeriodicityByType.abonnement[k] += row.countsByPeriodicityByType.abonnement[k];
 			total.countsByPeriodicityByType.charge[k] += row.countsByPeriodicityByType.charge[k];
+			total.countsByPeriodicityByType.epargne[k] += row.countsByPeriodicityByType.epargne[k];
 			total.rawCents[k] += row.rawCents[k];
 		}
 		total.lissedByType.abonnement += row.lissedByType.abonnement;
 		total.lissedByType.charge += row.lissedByType.charge;
+		total.lissedByType.epargne += row.lissedByType.epargne;
 	}
 	finaliseTotals(total);
 

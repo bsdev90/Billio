@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { m } from '$lib/paraglide/messages.js';
 	import { formatCents } from '$lib/format';
-	import { contrastText } from '$lib/budget-utils';
+	import {
+		contrastText,
+		SUBSCRIPTION_COLOR,
+		CHARGE_COLOR,
+		SAVINGS_COLOR
+	} from '$lib/budget-utils';
 	import type { Summary, SummaryRow } from '$lib/server/budget';
 
 	let { summary }: { summary: Summary } = $props();
@@ -11,24 +16,19 @@
 	const ROW_HEIGHT = '3.5rem';
 	const HEADER_HEIGHT = '3rem';
 
-	type Cell = { value: string; subLabel?: string | null };
+	type Part = { count: number; color: string; label: string };
+	type Cell = { value: string; parts?: Part[] | null };
 
 	function cellStyle(bg: string): string {
 		return `background-color: ${bg}; color: ${contrastText(bg)};`;
 	}
 
-	function aboLabel(count: number): string {
-		return count === 1 ? m.one_sub() : m.n_subs({ count: String(count) });
-	}
-
-	function chargeLabel(count: number): string {
-		return count === 1 ? m.one_charge() : m.n_charges({ count: String(count) });
-	}
-
-	function breakdownLabel(abo: number, charge: number): string | null {
-		if (abo <= 0 && charge <= 0) return null;
-		if (abo > 0 && charge > 0) return `${aboLabel(abo)} · ${chargeLabel(charge)}`;
-		return abo > 0 ? aboLabel(abo) : chargeLabel(charge);
+	function breakdownParts(abo: number, charge: number, saving: number): Part[] | null {
+		const out: Part[] = [];
+		if (abo > 0) out.push({ count: abo, color: SUBSCRIPTION_COLOR, label: m.type_subscription() });
+		if (charge > 0) out.push({ count: charge, color: CHARGE_COLOR, label: m.type_charge() });
+		if (saving > 0) out.push({ count: saving, color: SAVINGS_COLOR, label: m.type_savings() });
+		return out.length === 0 ? null : out;
 	}
 </script>
 
@@ -67,10 +67,25 @@
 					style="min-height: {ROW_HEIGHT}; grid-column: span {span}; {cellStyle(TOTAL_BG)}"
 				>
 					<span>{cell.value}</span>
-					{#if cell.subLabel}
-						<span class="mt-0.5 hidden text-[10px] font-medium opacity-70 sm:block"
-							>{cell.subLabel}</span
-						>
+					{#if cell.parts}
+						<span class="mt-0.5 hidden items-center justify-center gap-1.5 text-[11px] font-medium sm:flex">
+							{#each cell.parts as p (p.color)}
+								<span class="group relative inline-flex items-center gap-1">
+									<span class="inline-flex items-center gap-1 opacity-80">
+										<span
+											class="inline-block h-2 w-2 rounded-full"
+											style="background-color: {p.color};"
+										></span>
+										<span class="tabular-nums">{p.count}</span>
+									</span>
+									<span
+										class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-lg group-hover:block"
+									>
+										{p.label}
+									</span>
+								</span>
+							{/each}
+						</span>
 					{/if}
 				</div>
 			{/each}
@@ -96,10 +111,25 @@
 						style="min-height: {ROW_HEIGHT}; grid-column: span {span}; {cellStyle(baseColor)}"
 					>
 						<span>{cell.value}</span>
-						{#if cell.subLabel}
-							<span class="mt-0.5 hidden text-[10px] font-medium opacity-70 sm:block"
-								>{cell.subLabel}</span
-							>
+						{#if cell.parts}
+							<span class="mt-0.5 hidden items-center justify-center gap-1.5 text-[11px] font-medium sm:flex">
+								{#each cell.parts as p (p.color)}
+									<span class="group relative inline-flex items-center gap-1">
+										<span class="inline-flex items-center gap-1 opacity-80">
+											<span
+												class="inline-block h-2 w-2 rounded-full"
+												style="background-color: {p.color};"
+											></span>
+											<span class="tabular-nums">{p.count}</span>
+										</span>
+										<span
+											class="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white shadow-lg group-hover:block"
+										>
+											{p.label}
+										</span>
+									</span>
+								{/each}
+							</span>
 						{/if}
 					</div>
 				{/each}
@@ -110,8 +140,16 @@
 
 <div class="grid gap-4 sm:gap-8 xl:grid-cols-[2fr_3fr_2fr]">
 	{@render block(
-		[m.dashboard_column_subscriptions(), m.dashboard_column_charges()],
-		(row) => [{ value: String(row.counts.abonnement) }, { value: String(row.counts.charge) }]
+		[
+			m.dashboard_column_subscriptions(),
+			m.dashboard_column_charges(),
+			m.dashboard_column_savings()
+		],
+		(row) => [
+			{ value: String(row.counts.abonnement) },
+			{ value: String(row.counts.charge) },
+			{ value: String(row.counts.epargne) }
+		]
 	)}
 
 	{@render block(
@@ -123,23 +161,26 @@
 		(row) => [
 			{
 				value: formatCents(row.rawCents.monthly),
-				subLabel: breakdownLabel(
+				parts: breakdownParts(
 					row.countsByPeriodicityByType.abonnement.monthly,
-					row.countsByPeriodicityByType.charge.monthly
+					row.countsByPeriodicityByType.charge.monthly,
+					row.countsByPeriodicityByType.epargne.monthly
 				)
 			},
 			{
 				value: formatCents(row.rawCents.quarterly),
-				subLabel: breakdownLabel(
+				parts: breakdownParts(
 					row.countsByPeriodicityByType.abonnement.quarterly,
-					row.countsByPeriodicityByType.charge.quarterly
+					row.countsByPeriodicityByType.charge.quarterly,
+					row.countsByPeriodicityByType.epargne.quarterly
 				)
 			},
 			{
 				value: formatCents(row.rawCents.yearly),
-				subLabel: breakdownLabel(
+				parts: breakdownParts(
 					row.countsByPeriodicityByType.abonnement.yearly,
-					row.countsByPeriodicityByType.charge.yearly
+					row.countsByPeriodicityByType.charge.yearly,
+					row.countsByPeriodicityByType.epargne.yearly
 				)
 			}
 		]

@@ -19,7 +19,7 @@ function parseFilters(url: URL): EntryFilter {
 		if (ids.length > 0) filter.accountIds = ids;
 	}
 	const type = url.searchParams.get('type');
-	if (type === 'abonnement' || type === 'charge') filter.type = type;
+	if (type === 'abonnement' || type === 'charge' || type === 'epargne') filter.type = type;
 	const periodicity = url.searchParams.get('periodicity');
 	if (periodicity === 'mensuel' || periodicity === 'trimestriel' || periodicity === 'annuel') {
 		filter.periodicity = periodicity;

@@ -8,9 +8,9 @@
 
 	const initial = $derived({
 		label: raw?.label ?? data.entry.label,
-		type: ((raw?.type === 'abonnement' || raw?.type === 'charge'
+		type: ((raw?.type === 'abonnement' || raw?.type === 'charge' || raw?.type === 'epargne'
 			? raw.type
-			: data.entry.type) as 'abonnement' | 'charge'),
+			: data.entry.type) as 'abonnement' | 'charge' | 'epargne'),
 		accountId:
 			raw?.accountId != null && raw.accountId !== ''
 				? Number(raw.accountId)

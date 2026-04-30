@@ -7,7 +7,8 @@
 		monthlyLissedCents,
 		contrastText,
 		SUBSCRIPTION_COLOR,
-		CHARGE_COLOR
+		CHARGE_COLOR,
+		SAVINGS_COLOR
 	} from '$lib/budget-utils';
 	import SummaryBlocks from '$lib/components/SummaryBlocks.svelte';
 	import PieChart from '$lib/components/PieChart.svelte';
@@ -85,7 +86,8 @@
 		summary.rows.map((r) => ({
 			label: r.accountName,
 			abonnementCents: r.lissedByType.abonnement,
-			chargeCents: r.lissedByType.charge
+			chargeCents: r.lissedByType.charge,
+			epargneCents: r.lissedByType.epargne
 		}))
 	);
 
@@ -99,6 +101,11 @@
 			label: m.type_charge(),
 			value: summary.total.lissedByType.charge,
 			color: CHARGE_COLOR
+		},
+		{
+			label: m.type_savings(),
+			value: summary.total.lissedByType.epargne,
+			color: SAVINGS_COLOR
 		}
 	]);
 
@@ -141,8 +148,16 @@
 		return m.periodicity_yearly();
 	}
 
-	function typeLabel(t: 'abonnement' | 'charge') {
-		return t === 'abonnement' ? m.type_subscription() : m.type_charge();
+	function typeLabel(t: 'abonnement' | 'charge' | 'epargne') {
+		if (t === 'abonnement') return m.type_subscription();
+		if (t === 'charge') return m.type_charge();
+		return m.type_savings();
+	}
+
+	function typeColor(t: 'abonnement' | 'charge' | 'epargne'): string {
+		if (t === 'abonnement') return SUBSCRIPTION_COLOR;
+		if (t === 'charge') return CHARGE_COLOR;
+		return SAVINGS_COLOR;
 	}
 
 	function handleDelete(e: SubmitEvent) {
@@ -154,7 +169,7 @@
 	let sortDir = $state<'asc' | 'desc'>('asc');
 
 	const PERIODICITY_RANK = { mensuel: 0, trimestriel: 1, annuel: 2 } as const;
-	const TYPE_RANK = { abonnement: 0, charge: 1 } as const;
+	const TYPE_RANK = { abonnement: 0, charge: 1, epargne: 2 } as const;
 
 	const sortedEntries = $derived.by(() => {
 		const list = [...data.entries];
@@ -278,6 +293,7 @@
 						<option value="">{m.entries_filter_type()}</option>
 						<option value="abonnement">{m.type_subscription()}</option>
 						<option value="charge">{m.type_charge()}</option>
+						<option value="epargne">{m.type_savings()}</option>
 					</select>
 				</label>
 				<label class="contents sm:flex sm:items-center sm:gap-2">
@@ -412,9 +428,7 @@
 											<span class="inline-flex items-center gap-1.5">
 												<span
 													class="inline-block h-2 w-2 shrink-0 rounded-full md:hidden"
-													style="background-color: {entry.type === 'abonnement'
-														? SUBSCRIPTION_COLOR
-														: CHARGE_COLOR}"
+													style="background-color: {typeColor(entry.type)}"
 												></span>
 												<span class="truncate">{entry.label}</span>
 											</span>
@@ -435,9 +449,7 @@
 										<span class="inline-flex items-center gap-1.5">
 											<span
 												class="inline-block h-2 w-2 rounded-full"
-												style="background-color: {entry.type === 'abonnement'
-													? SUBSCRIPTION_COLOR
-													: CHARGE_COLOR}"
+												style="background-color: {typeColor(entry.type)}"
 											></span>
 											{typeLabel(entry.type)}
 										</span>

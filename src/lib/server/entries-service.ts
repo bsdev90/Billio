@@ -6,7 +6,7 @@ import { parseAmountToCents } from '$lib/format';
 
 export const entrySchema = z.object({
 	label: z.string().trim().min(1).max(200),
-	type: z.enum(['abonnement', 'charge']),
+	type: z.enum(['abonnement', 'charge', 'epargne']),
 	accountId: z.number().int().positive(),
 	periodicity: z.enum(['mensuel', 'trimestriel', 'annuel']),
 	amountCents: z.number().int().positive(),
@@ -79,7 +79,7 @@ export function parseEntryForm(form: FormData): {
 
 export type EntryFilter = {
 	accountIds?: number[];
-	type?: 'abonnement' | 'charge';
+	type?: 'abonnement' | 'charge' | 'epargne';
 	periodicity?: 'mensuel' | 'trimestriel' | 'annuel';
 	status?: 'active' | 'inactive';
 };

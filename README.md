@@ -1,6 +1,6 @@
 # Billio
 
-**Billio** is a small self-hosted app for tracking your recurring household charges and subscriptions (rent, electricity, insurance, internet box, VOD, music, and so on).
+**Billio** is a small self-hosted app for tracking your recurring household outflows: subscriptions, charges, and savings transfers (rent, electricity, insurance, internet box, VOD, music, life insurance, savings accounts, and so on).
 
 The idea: a single page that answers the question *"how much do I really pay every month?"*, with quarterly and yearly charges automatically smoothed back to a monthly figure.
 
@@ -16,10 +16,11 @@ The idea: a single page that answers the question *"how much do I really pay eve
 
 ## Features
 
-- **Dashboard** with a per-account summary: number of subscriptions, number of charges, monthly, quarterly, yearly and smoothed totals.
-- **Charts**: monthly breakdown by account (pie), subscriptions vs charges by account (bars), overall subscription/charge share (donut).
-- **Filterable list** of entries: by account, by type (subscription / charge), by periodicity (monthly / quarterly / yearly), by status (active / inactive).
-- **Customisable accounts**: name, colour, display order.
+- **Three entry types**: *subscription*, *charge* and *savings*. Savings (life insurance, monthly transfers to a savings account, etc.) are still money leaving the bank account, so they count toward the totals just like the rest, with their own colour and slice in the charts.
+- **Dashboard** with a per-account summary: counts per type, monthly, quarterly, yearly and smoothed totals.
+- **Charts**: monthly breakdown by account (pie), subscription / charge / savings split per account (bars) and overall (donut).
+- **Filterable list** of entries: by account, by type (subscription / charge / savings), by periodicity (monthly / quarterly / yearly), by status (active / inactive).
+- **Customisable accounts**: name, colour, display order, plus an optional *hidden by default* flag so an account starts hidden on the dashboard until you click its pill.
 - **Multi-user with roles**: admins manage accounts and users; regular users can view the dashboard and edit entries.
 - **Bilingual interface**: English and French, switchable any time from the settings.
 - **Multi-currency**: pick from EUR, USD, GBP, CHF, CAD, AUD or JPY; each amount renders in its native format (e.g. `1 234,56 €` for euros, `$1,234.56` for US dollars).
@@ -115,8 +116,8 @@ You'll be **forced to change them** on first sign-in. Pick a password of at leas
 1. **Create your accounts** in *Settings → Accounts* (admins only). An account groups related expenses (per household, per person, per project, and so on). Each account has a colour that's reused in the charts.
 2. **Invite the rest of the household** in *Settings → Users* (admins only). For each person you can choose whether they're a regular user or an admin. New users are asked to set their password on first sign-in.
 3. **Add your entries** from the dashboard. For each one, fill in:
-   - a **label** (for example *Netflix*, *Rent*, *Car insurance*),
-   - the **type**: *subscription* or *charge*,
+   - a **label** (for example *Netflix*, *Rent*, *Car insurance*, *Life insurance*),
+   - the **type**: *subscription*, *charge* or *savings*,
    - the **periodicity**: monthly, quarterly or yearly,
    - the **amount**,
    - the **account** the entry belongs to,

@@ -25,7 +25,7 @@ export const accounts = sqliteTable(
 export const entries = sqliteTable('entries', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
 	label: text('label').notNull(),
-	type: text('type', { enum: ['abonnement', 'charge'] }).notNull(),
+	type: text('type', { enum: ['abonnement', 'charge', 'epargne'] }).notNull(),
 	day: integer('day'),
 	periodicity: text('periodicity', {
 		enum: ['mensuel', 'trimestriel', 'annuel']

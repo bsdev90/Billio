@@ -3,9 +3,10 @@ export type Periodicity = 'mensuel' | 'trimestriel' | 'annuel';
 /** Soft/lightened color palette used in the summary table (blocks). */
 export const CHART_LIGHTEN_AMOUNT = 0.55;
 
-/** Neutral palette used for "Subscriptions vs Charges" charts. */
+/** Neutral palette used for the type breakdown charts. */
 export const SUBSCRIPTION_COLOR = '#475569'; // slate-600 (dark)
 export const CHARGE_COLOR = '#94a3b8'; // slate-400 (light)
+export const SAVINGS_COLOR = '#10b981'; // emerald-500
 
 export function monthlyLissedCents(entry: {
 	amountCents: number;

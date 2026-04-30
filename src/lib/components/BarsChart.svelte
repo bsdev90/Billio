@@ -1,14 +1,20 @@
 <script lang="ts">
 	import { formatCents } from '$lib/format';
 	import { m } from '$lib/paraglide/messages.js';
-	import { SUBSCRIPTION_COLOR, CHARGE_COLOR, contrastText } from '$lib/budget-utils';
+	import { SUBSCRIPTION_COLOR, CHARGE_COLOR, SAVINGS_COLOR, contrastText } from '$lib/budget-utils';
 
-	type Group = { label: string; abonnementCents: number; chargeCents: number };
+	type Group = {
+		label: string;
+		abonnementCents: number;
+		chargeCents: number;
+		epargneCents: number;
+	};
 
 	let { groups, title }: { groups: Group[]; title?: string } = $props();
 
 	const subText = contrastText(SUBSCRIPTION_COLOR);
 	const chargeText = contrastText(CHARGE_COLOR);
+	const savingsText = contrastText(SAVINGS_COLOR);
 </script>
 
 <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -18,9 +24,10 @@
 
 	<div class="space-y-3">
 		{#each groups as g (g.label)}
-			{@const total = g.abonnementCents + g.chargeCents}
+			{@const total = g.abonnementCents + g.chargeCents + g.epargneCents}
 			{@const subPct = total === 0 ? 0 : (g.abonnementCents / total) * 100}
 			{@const chargePct = total === 0 ? 0 : (g.chargeCents / total) * 100}
+			{@const savingsPct = total === 0 ? 0 : (g.epargneCents / total) * 100}
 			<div>
 				<div class="mb-1 flex items-baseline justify-between text-xs">
 					<span class="font-medium text-slate-700">{g.label}</span>
@@ -47,6 +54,15 @@
 							{#if chargePct >= 12}{Math.round(chargePct)}%{/if}
 						</div>
 					{/if}
+					{#if savingsPct > 0}
+						<div
+							class="flex items-center justify-center text-xs font-semibold tabular-nums"
+							style="width: {savingsPct}%; background-color: {SAVINGS_COLOR}; color: {savingsText};"
+							title="{m.type_savings()}: {formatCents(g.epargneCents)} ({Math.round(savingsPct)}%)"
+						>
+							{#if savingsPct >= 12}{Math.round(savingsPct)}%{/if}
+						</div>
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -64,6 +80,11 @@
 			<span class="inline-block h-2 w-2 rounded-full" style="background-color: {CHARGE_COLOR}"
 			></span>
 			{m.type_charge()}
+		</span>
+		<span class="inline-flex items-center gap-1.5">
+			<span class="inline-block h-2 w-2 rounded-full" style="background-color: {SAVINGS_COLOR}"
+			></span>
+			{m.type_savings()}
 		</span>
 	</div>
 </div>
